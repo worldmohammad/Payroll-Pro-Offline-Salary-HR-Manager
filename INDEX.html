@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Pro Demo | Advanced Salary & HR Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee; --primary-dark: #3a56d4; --secondary-color: #7209b7;
+            --accent-color: #f72585; --success-color: #4cc9f0; --success-dark: #00b8d4;
+            --warning-color: #f8961e; --danger-color: #f94144; --info-color: #4895ef;
+            --bg-color: #f4f7fe; --card-bg: #ffffff; --text-main: #2b2d42;
+            --text-muted: #8d99ae; --border-color: #e2e8f0;
+            --radius-lg: 16px; --radius-md: 10px;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.03); --shadow-md: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; height: 100vh; overflow: hidden;
+        }
+        body::before {
+            content: 'DEMO VERSION - Limited to 5 Employees';
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 3.5vw; color: rgba(239, 68, 68, 0.1);
+            white-space: nowrap; pointer-events: none; z-index: 9998;
+            font-weight: 900; user-select: none; letter-spacing: 4px;
+        }
+        body::after {
+            content: 'Upgrade at digitalyar.company';
+            position: fixed; top: 20%; left: 10%; transform: rotate(20deg);
+            font-size: 2vw; color: rgba(37, 99, 235, 0.07);
+            white-space: nowrap; pointer-events: none; z-index: 9997;
+            font-weight: 700; user-select: none;
+        }
+        .sidebar { width: 240px; background: var(--card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
+        .logo-container { padding: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .logo-icon { background: linear-gradient(135deg, var(--primary-color), var(--info-color)); color: white; width: 36px; height: 36px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .logo-text { font-size: 1rem; font-weight: 800; }
+        .logo-text .demo-badge { background: var(--warning-color); color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 6px; margin-left: 4px; }
+        .nav-menu { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        .nav-item { padding: 10px 14px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
+        .nav-item:hover { background-color: var(--bg-color); color: var(--primary-color); }
+        .nav-item.active { background-color: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(67,97,238,0.3); }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { height: 60px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+        .content-area { flex: 1; padding: 24px; overflow-y: auto; }
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.02); margin-bottom: 20px; }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { display: flex; align-items: center; gap: 12px; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .stat-icon.primary { background: rgba(67,97,238,0.1); color: var(--primary-color); }
+        .stat-icon.success { background: rgba(76,201,240,0.1); color: var(--success-dark); }
+        .stat-icon.warning { background: rgba(248,150,30,0.1); color: var(--warning-color); }
+        .stat-details h3 { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .stat-details h2 { font-size: 1.3rem; color: var(--text-main); font-weight: 700; }
+        .btn { padding: 8px 16px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success-dark); color: white; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-info { background: var(--info-color); color: white; }
+        .btn-outline { border: 1px solid var(--border-color); background: transparent; color: var(--text-main); }
+        .btn-pro { background: linear-gradient(135deg, #f59e0b, #d97706); opacity: 0.7; cursor: not-allowed; }
+        .pro-badge { background: rgba(255,255,255,0.3); font-size: 0.6rem; padding: 2px 6px; border-radius: 6px; font-weight: 700; text-transform: uppercase; margin-left: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-weight: 600; color: var(--text-muted); background: var(--bg-color); font-size: 0.78rem; text-transform: uppercase; }
+        tr:hover { background-color: rgba(0,0,0,0.01); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; }
+        .form-control { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.9rem; outline: none; transition: all 0.2s; background: var(--bg-color); }
+        .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(67,97,238,0.1); background: white; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; }
+        .page-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; background: white; color: var(--text-main); font-weight: 600; font-size: 0.8rem; }
+        .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; backdrop-filter: blur(4px); }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 450px; border-radius: var(--radius-lg); padding: 24px; transform: translateY(20px); transition: all 0.2s; max-height: 85vh; overflow-y: auto; }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-close { background: none; border: none; font-size: 1.3rem; color: var(--text-muted); cursor: pointer; }
+        .payslip-container { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 30px; max-width: 700px; margin: 0 auto; }
+        .payslip-header { text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px; }
+        .payslip-body { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .pay-section { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; }
+        .pay-section h4 { background: var(--bg-color); padding: 8px; margin: -12px -12px 12px -12px; border-bottom: 1px solid var(--border-color); border-radius: 8px 8px 0 0; text-align: center; color: var(--primary-color); font-size: 0.9rem; }
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .pay-row.total { font-weight: 700; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
+        .net-pay-box { background: rgba(76,201,240,0.1); border: 1px solid var(--success-color); padding: 16px; border-radius: 8px; text-align: center; margin-top: 24px; }
+        .net-pay-box h2 { color: var(--success-dark); font-size: 1.6rem; }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1050; display: flex; flex-direction: column; gap: 8px; }
+        .toast { min-width: 280px; padding: 14px 20px; border-radius: var(--radius-md); color: white; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-md); font-weight: 500; animation: slideIn 0.3s ease forwards; font-size: 0.9rem; }
+        .toast.success { background: linear-gradient(135deg, var(--success-dark), #0096c7); }
+        .toast.error { background: linear-gradient(135deg, var(--danger-color), #d90429); }
+        .toast.warning { background: linear-gradient(135deg, var(--warning-color), #f3722c); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @media (max-width: 768px) { .sidebar { width: 200px; } .payslip-body { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo-icon"><i class="fa-solid fa-database"></i></div>
+            <div class="logo-text">Payroll Pro <span class="demo-badge">DEMO</span></div>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item active" data-target="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</div>
+            <div class="nav-item" data-target="departments"><i class="fa-solid fa-building"></i> Departments</div>
+            <div class="nav-item" data-target="employees"><i class="fa-solid fa-users"></i> Employees</div>
+            <div class="nav-item" data-target="calculator"><i class="fa-solid fa-calculator"></i> Calculator</div>
+            <div class="nav-item" data-target="reports"><i class="fa-solid fa-file-lines"></i> History</div>
+            <div class="nav-item" data-target="settings"><i class="fa-solid fa-gear"></i> Settings</div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div>
+                <h2 style="font-size:1.1rem;font-weight:700;" id="page-title">Dashboard</h2>
+                <p style="color:var(--text-muted);font-size:0.75rem;">Demo: 5 employees, 3 departments max</p>
+            </div>
+            <span style="font-weight:500;color:var(--text-muted);font-size:0.8rem;" id="current-date"></span>
+        </header>
+
+        <div class="content-area">
+            <!-- Dashboard -->
+            <section id="dashboard" class="view-section active">
+                <div class="grid-cards">
+                    <div class="card stat-card"><div class="stat-icon primary"><i class="fa-solid fa-users"></i></div><div class="stat-details"><h3>Employees</h3><h2 id="dash-emp">0</h2></div></div>
+                    <div class="card stat-card"><div class="stat-icon warning"><i class="fa-solid fa-building"></i></div><div class="stat-details"><h3>Departments</h3><h2 id="dash-dept">0</h2></div></div>
+                    <div class="card stat-card"><div class="stat-icon success"><i class="fa-solid fa-money-check-dollar"></i></div><div class="stat-details"><h3>Total Paid</h3><h2 id="dash-paid">$0</h2></div></div>
+                    <div class="card stat-card"><div class="stat-icon" style="background:rgba(114,9,183,0.1);color:var(--secondary-color)"><i class="fa-solid fa-chart-line"></i></div><div class="stat-details"><h3>Monthly Base</h3><h2 id="dash-cost">$0</h2></div></div>
+                </div>
+                <div class="card"><h3 style="margin-bottom:16px;">Salary by Department</h3><div style="height:280px;"><canvas id="payrollChart"></canvas></div></div>
+            </section>
+
+            <!-- Departments -->
+            <section id="departments" class="view-section">
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3>Departments</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('deptModal')"><i class="fa-solid fa-plus"></i> Add</button>
+                    </div>
+                    <p style="font-size:0.75rem;color:var(--warning-color);margin-bottom:10px;">⚠️ Demo limit: 3 departments max</p>
+                    <table><thead><tr><th>ID</th><th>Name</th><th>Headcount</th><th>Total Base</th><th>Action</th></tr></thead><tbody id="dept-tbody"></tbody></table>
+                </div>
+            </section>
+
+            <!-- Employees -->
+            <section id="employees" class="view-section">
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3>Employees</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openEmpModal()"><i class="fa-solid fa-plus"></i> Add</button>
+                    </div>
+                    <p style="font-size:0.75rem;color:var(--warning-color);margin-bottom:10px;">⚠️ Demo limit: 5 employees max</p>
+                    <input type="text" id="search-emp" class="form-control" placeholder="Search..." style="margin-bottom:12px;width:250px;">
+                    <table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Base</th><th>Action</th></tr></thead><tbody id="emp-tbody"></tbody></table>
+                    <div class="pagination" id="emp-pagination"></div>
+                </div>
+            </section>
+
+            <!-- Calculator -->
+            <section id="calculator" class="view-section">
+                <div class="card" id="calc-form">
+                    <h3 style="margin-bottom:16px;">Calculate Payslip</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Employee</label><select id="calc-emp" class="form-control" onchange="loadEmpCalc()"><option value="">-- Select --</option></select></div>
+                        <div class="form-group"><label>Period</label><input type="month" id="calc-period" class="form-control"></div>
+                        <div class="form-group"><label>Base Salary ($)</label><input type="number" id="calc-base" class="form-control" readonly></div>
+                        <div class="form-group"><label>Overtime Hours</label><input type="number" id="calc-ot" class="form-control" value="0" min="0"></div>
+                        <div class="form-group"><label>Bonus ($)</label><input type="number" id="calc-bonus" class="form-control" value="0" min="0"></div>
+                        <div class="form-group"><label>Other Deductions ($)</label><input type="number" id="calc-ded" class="form-control" value="0" min="0"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateSlip()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate</button>
+                </div>
+                <div id="payslip-wrapper" style="display:none;">
+                    <button class="btn btn-outline btn-sm" onclick="closeSlip()" style="margin-bottom:12px;">← Back</button>
+                    <p style="font-size:0.75rem;color:var(--warning-color);margin-bottom:10px;">📥 Print/PDF is a Pro feature. <a href="https://digitalyar.company/product/spa15-payroll-manager/" target="_blank" style="color:var(--primary-color);">Upgrade →</a></p>
+                    <div class="payslip-container" id="slip-content">
+                        <div class="payslip-header"><h2>COMPANY LLC</h2><p style="color:var(--text-muted);">Payslip</p><h3 style="margin-top:10px;">Period: <span id="slip-period"></span></h3></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:20px;background:var(--bg-color);padding:12px;border-radius:8px;">
+                            <div><p><strong>Employee:</strong> <span id="slip-name"></span></p><p><strong>ID:</strong> <span id="slip-id"></span></p></div>
+                            <div style="text-align:right;"><p><strong>Dept:</strong> <span id="slip-dept"></span></p></div>
+                        </div>
+                        <div class="payslip-body">
+                            <div class="pay-section"><h4>Earnings</h4><div class="pay-row"><span>Base</span><span id="slip-base">$0</span></div><div class="pay-row"><span>Overtime</span><span id="slip-ot">$0</span></div><div class="pay-row"><span>Bonus</span><span id="slip-bonus">$0</span></div><div class="pay-row total"><span>Gross</span><span id="slip-gross">$0</span></div></div>
+                            <div class="pay-section"><h4>Deductions</h4><div class="pay-row"><span>Tax (<span id="slip-tax-rate">15</span>%)</span><span id="slip-tax">$0</span></div><div class="pay-row"><span>Insurance (<span id="slip-ins-rate">5</span>%)</span><span id="slip-ins">$0</span></div><div class="pay-row"><span>Other</span><span id="slip-other">$0</span></div><div class="pay-row total"><span>Total Ded.</span><span id="slip-total-ded">$0</span></div></div>
+                        </div>
+                        <div class="net-pay-box"><p>NET PAYABLE</p><h2 id="slip-net">$0</h2></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History -->
+            <section id="reports" class="view-section">
+                <div class="card">
+                    <h3 style="margin-bottom:14px;">Payroll History</h3>
+                    <table><thead><tr><th>Slip ID</th><th>Period</th><th>Employee</th><th>Gross</th><th>Net</th><th>Action</th></tr></thead><tbody id="hist-tbody"></tbody></table>
+                    <div class="pagination" id="hist-pagination"></div>
+                    <p style="font-size:0.75rem;color:var(--warning-color);margin-top:12px;">📥 CSV Export is a Pro feature. <a href="https://digitalyar.company/product/spa15-payroll-manager/" target="_blank" style="color:var(--primary-color);">Upgrade →</a></p>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings" class="view-section">
+                <div class="grid-cards">
+                    <div class="card">
+                        <h3 style="margin-bottom:14px;">Tax & Insurance</h3>
+                        <div class="form-group" style="margin-bottom:10px;"><label>Tax Rate (%)</label><input type="number" id="set-tax" class="form-control" min="0" max="100"></div>
+                        <div class="form-group" style="margin-bottom:14px;"><label>Insurance (%)</label><input type="number" id="set-ins" class="form-control" min="0" max="100"></div>
+                        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom:14px;">Data Management</h3>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            <button class="btn btn-info btn-sm" onclick="loadDemo()"><i class="fa-solid fa-flask"></i> Load Demo Data</button>
+                            <button class="btn btn-outline btn-sm" onclick="showProAlert('Backup/Restore')">📥 Backup <span class="pro-badge">PRO</span></button>
+                            <button class="btn btn-outline btn-sm" onclick="showProAlert('Restore')">📤 Restore <span class="pro-badge">PRO</span></button>
+                            <button class="btn btn-danger btn-sm" onclick="clearAll()"><i class="fa-solid fa-trash"></i> Clear All</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="deptModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Add Department</h3><button class="modal-close" onclick="closeModal('deptModal')">&times;</button></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>Dept ID</label><input type="text" id="dept-id" class="form-control" placeholder="D-001"></div>
+            <div class="form-group"><label>Name</label><input type="text" id="dept-name" class="form-control" placeholder="Engineering"></div>
+            <button class="btn btn-primary btn-sm" onclick="saveDept()" style="margin-top:14px;">Save</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="empModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Add Employee</h3><button class="modal-close" onclick="closeModal('empModal')">&times;</button></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Emp ID</label><input type="text" id="emp-id" class="form-control" placeholder="EMP-101"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="emp-name" class="form-control" placeholder="John Doe"></div>
+                <div class="form-group"><label>Department</label><select id="emp-dept" class="form-control"><option value="">-- Select --</option></select></div>
+                <div class="form-group"><label>Base Salary ($)</label><input type="number" id="emp-base" class="form-control" placeholder="5000"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveEmp()" style="margin-top:14px;">Save</button>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const DEMO = { departments: 3, employees: 5 };
+        const DB = 'PayrollDemo_v1';
+        let db, departments=[], employees=[], history=[], settings={taxRate:15,insRate:5};
+        let chart, empPage=1, histPage=1, perPage=5;
+
+        const req = indexedDB.open(DB, 1);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            ['departments','employees','payroll','settings'].forEach(s => { if(!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:'id'}); });
+        };
+        req.onsuccess = async e => {
+            db = e.target.result;
+            [departments, employees, history] = await Promise.all([getAll('departments'),getAll('employees'),getAll('payroll')]);
+            history.sort((a,b)=>new Date(b.issueDate)-new Date(a.issueDate));
+            const s = await getAll('settings');
+            if(s.length) settings = s[0]; else await save('settings',{id:'global',...settings});
+            document.getElementById('set-tax').value = settings.taxRate;
+            document.getElementById('set-ins').value = settings.insRate;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+            document.getElementById('calc-period').value = new Date().toISOString().slice(0,7);
+            init();
+        };
+
+        function getAll(s) { return new Promise(r => { const t = db.transaction(s,'readonly'); t.objectStore(s).getAll().onsuccess = e => r(e.target.result||[]); }); }
+        function save(s, d) { return new Promise(r => { const t = db.transaction(s,'readwrite'); t.objectStore(s).put(d); t.oncomplete = r; }); }
+        function del(s, id) { return new Promise(r => { const t = db.transaction(s,'readwrite'); t.objectStore(s).delete(id); t.oncomplete = r; }); }
+        function clearS(s) { return new Promise(r => { const t = db.transaction(s,'readwrite'); t.objectStore(s).clear(); t.oncomplete = r; }); }
+        function count(s) { return new Promise(r => { const t = db.transaction(s,'readonly'); t.objectStore(s).count().onsuccess = e => r(e.target.result); }); }
+
+        function showToast(m, t='success') {
+            const c = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${t}`;
+            el.innerHTML = `<i class="fa-solid fa-${t==='error'?'circle-xmark':t==='warning'?'triangle-exclamation':'check-circle'}"></i> ${m}`;
+            c.appendChild(el);
+            setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2500);
+        }
+
+        function showProAlert(f) { alert(`🔒 ${f} is a Pro feature.\n\nUpgrade at digitalyar.company for full access.`); }
+
+        function init() { updateDash(); renderDepts(); renderEmps(); renderHist(); populateSelects(); }
+
+        function updateDash() {
+            document.getElementById('dash-emp').textContent = employees.length;
+            document.getElementById('dash-dept').textContent = departments.length;
+            document.getElementById('dash-cost').textContent = '$'+employees.reduce((s,e)=>s+e.base,0).toLocaleString();
+            document.getElementById('dash-paid').textContent = '$'+history.reduce((s,h)=>s+h.netPay,0).toLocaleString();
+            if(chart) chart.destroy();
+            const ctx = document.getElementById('payrollChart')?.getContext('2d');
+            if(!ctx) return;
+            const costs = {};
+            departments.forEach(d => costs[d.name]=0);
+            employees.forEach(e => { const dn = departments.find(d=>d.id===e.dept)?.name||'Unknown'; costs[dn] = (costs[dn]||0)+e.base; });
+            chart = new Chart(ctx, { type:'doughnut', data:{ labels:Object.keys(costs), datasets:[{ data:Object.values(costs), backgroundColor:['#4361ee','#7209b7','#f72585','#4cc9f0','#f8961e'] }] }, options:{ responsive:true, maintainAspectRatio:false } });
+        }
+
+        function renderDepts() {
+            const tb = document.getElementById('dept-tbody');
+            tb.innerHTML = departments.length ? departments.map(d => {
+                const hc = employees.filter(e=>e.dept===d.id).length;
+                const tb = employees.filter(e=>e.dept===d.id).reduce((s,e)=>s+e.base,0);
+                return `<tr><td>${d.id}</td><td>${d.name}</td><td>${hc}</td><td>$${tb.toLocaleString()}</td><td><button class="btn btn-danger btn-sm" onclick="delDept('${d.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            }).join('') : '<tr><td colspan="5" style="text-align:center;padding:20px;">No departments</td></tr>';
+        }
+
+        function renderEmps() {
+            const q = (document.getElementById('search-emp')?.value||'').toLowerCase();
+            const f = employees.filter(e => e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q));
+            const tp = Math.ceil(f.length/perPage)||1;
+            if(empPage>tp) empPage=tp;
+            const pg = f.slice((empPage-1)*perPage, empPage*perPage);
+            const tb = document.getElementById('emp-tbody');
+            tb.innerHTML = pg.length ? pg.map(e => {
+                const dn = departments.find(d=>d.id===e.dept)?.name||e.dept;
+                return `<tr><td style="color:var(--primary-color);font-weight:600;">${e.id}</td><td>${e.name}</td><td>${dn}</td><td>$${e.base.toLocaleString()}</td><td><button class="btn btn-danger btn-sm" onclick="delEmp('${e.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            }).join('') : '<tr><td colspan="5" style="text-align:center;padding:20px;">No employees</td></tr>';
+            const pag = document.getElementById('emp-pagination');
+            pag.innerHTML = '';
+            if(tp>1) {
+                pag.innerHTML += `<button class="page-btn" ${empPage===1?'disabled':''} onclick="changeEmpPage(${empPage-1})">←</button>`;
+                for(let i=1;i<=tp;i++) pag.innerHTML += `<button class="page-btn ${empPage===i?'active':''}" onclick="changeEmpPage(${i})">${i}</button>`;
+                pag.innerHTML += `<button class="page-btn" ${empPage===tp?'disabled':''} onclick="changeEmpPage(${empPage+1})">→</button>`;
+            }
+        }
+
+        function renderHist() {
+            const tp = Math.ceil(history.length/perPage)||1;
+            if(histPage>tp) histPage=tp;
+            const pg = history.slice((histPage-1)*perPage, histPage*perPage);
+            const tb = document.getElementById('hist-tbody');
+            tb.innerHTML = pg.length ? pg.map(h => {
+                const pd = new Date(h.period+'-01');
+                const ps = isNaN(pd.getTime())?h.period:pd.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+                return `<tr><td style="font-size:0.8rem;font-weight:600;">${h.slipId}</td><td>${ps}</td><td>${h.empName}</td><td>$${h.grossPay.toLocaleString()}</td><td style="color:var(--success-dark);font-weight:600;">$${h.netPay.toLocaleString()}</td><td><button class="btn btn-info btn-sm" onclick="viewSlip('${h.slipId}')">View</button></td></tr>`;
+            }).join('') : '<tr><td colspan="6" style="text-align:center;padding:20px;">No history</td></tr>';
+            const pag = document.getElementById('hist-pagination');
+            pag.innerHTML = '';
+            if(tp>1) {
+                pag.innerHTML += `<button class="page-btn" ${histPage===1?'disabled':''} onclick="changeHistPage(${histPage-1})">←</button>`;
+                for(let i=1;i<=tp;i++) pag.innerHTML += `<button class="page-btn ${histPage===i?'active':''}" onclick="changeHistPage(${i})">${i}</button>`;
+                pag.innerHTML += `<button class="page-btn" ${histPage===tp?'disabled':''} onclick="changeHistPage(${histPage+1})">→</button>`;
+            }
+        }
+
+        function populateSelects() {
+            const cs = document.getElementById('calc-emp');
+            cs.innerHTML = '<option value="">-- Select --</option>' + employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+            const ed = document.getElementById('emp-dept');
+            ed.innerHTML = '<option value="">-- Select --</option>' + departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+        async function saveDept() {
+            const id = document.getElementById('dept-id').value.trim(), name = document.getElementById('dept-name').value.trim();
+            if(!id||!name) return showToast('Fill all fields','error');
+            const cnt = await count('departments');
+            if(!departments.find(d=>d.id===id) && cnt >= DEMO.departments) return showToast(`Demo limit: ${DEMO.departments} departments max.`,'warning');
+            const dept = {id,name};
+            await save('departments', dept);
+            const idx = departments.findIndex(d=>d.id===id);
+            if(idx>=0) departments[idx]=dept; else departments.push(dept);
+            closeModal('deptModal'); renderDepts(); populateSelects(); updateDash();
+            showToast('Department saved','success');
+        }
+
+        async function saveEmp() {
+            const id=document.getElementById('emp-id').value.trim(),name=document.getElementById('emp-name').value.trim(),dept=document.getElementById('emp-dept').value,base=parseFloat(document.getElementById('emp-base').value);
+            if(!id||!name||!dept||isNaN(base)) return showToast('Fill all fields','error');
+            const cnt = await count('employees');
+            if(!employees.find(e=>e.id===id) && cnt >= DEMO.employees) return showToast(`Demo limit: ${DEMO.employees} employees max.`,'warning');
+            const emp = {id,name,dept,base};
+            await save('employees', emp);
+            const idx = employees.findIndex(e=>e.id===id);
+            if(idx>=0) employees[idx]=emp; else employees.push(emp);
+            closeModal('empModal'); renderEmps(); renderDepts(); populateSelects(); updateDash();
+            showToast('Employee saved','success');
+        }
+
+        async function delDept(id) {
+            if(employees.some(e=>e.dept===id)) return showToast('Department has employees','error');
+            if(!confirm('Delete?')) return;
+            await del('departments',id);
+            departments = departments.filter(d=>d.id!==id);
+            renderDepts(); populateSelects(); updateDash();
+        }
+
+        async function delEmp(id) {
+            if(!confirm('Delete?')) return;
+            await del('employees',id);
+            employees = employees.filter(e=>e.id!==id);
+            renderEmps(); renderDepts(); updateDash();
+        }
+
+        function loadEmpCalc() {
+            const id = document.getElementById('calc-emp').value;
+            const emp = employees.find(e=>e.id===id);
+            document.getElementById('calc-base').value = emp?emp.base:'';
+        }
+
+        async function generateSlip() {
+            const eid = document.getElementById('calc-emp').value;
+            if(!eid) return showToast('Select employee','error');
+            const emp = employees.find(e=>e.id===eid);
+            const period = document.getElementById('calc-period').value;
+            const base = parseFloat(document.getElementById('calc-base').value)||0;
+            const ot = (parseFloat(document.getElementById('calc-ot').value)||0)*25;
+            const bonus = parseFloat(document.getElementById('calc-bonus').value)||0;
+            const otherDed = parseFloat(document.getElementById('calc-ded').value)||0;
+            const gross = base+ot+bonus;
+            const tax = gross*(settings.taxRate/100);
+            const ins = gross*(settings.insRate/100);
+            const totalDed = tax+ins+otherDed;
+            const net = gross-totalDed;
+            const dn = departments.find(d=>d.id===emp.dept)?.name||'Unknown';
+            const slip = { id:'SLP-'+Date.now().toString().slice(-6), slipId:'SLP-'+Date.now().toString().slice(-6), empId:emp.id, empName:emp.name, deptId:emp.dept, deptName:dn, period, issueDate:new Date().toLocaleDateString('en-US'), base, otHrs:parseFloat(document.getElementById('calc-ot').value)||0, overtimePay:ot, bonus, grossPay:gross, taxRate:settings.taxRate, taxAmount:tax, insRate:settings.insRate, insAmount:ins, otherDed, totalDed, netPay:net };
+            await save('payroll', slip);
+            history.unshift(slip);
+            showSlip(slip);
+            renderHist(); updateDash();
+            showToast('Payslip generated','success');
+        }
+
+        function showSlip(s) {
+            document.getElementById('calc-form').style.display='none';
+            document.getElementById('payslip-wrapper').style.display='block';
+            const pd = new Date(s.period+'-01');
+            document.getElementById('slip-period').textContent = isNaN(pd.getTime())?s.period:pd.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+            document.getElementById('slip-name').textContent = s.empName;
+            document.getElementById('slip-id').textContent = s.empId;
+            document.getElementById('slip-dept').textContent = s.deptName;
+            document.getElementById('slip-base').textContent = '$'+s.base.toLocaleString();
+            document.getElementById('slip-ot').textContent = '$'+s.overtimePay.toLocaleString();
+            document.getElementById('slip-bonus').textContent = '$'+s.bonus.toLocaleString();
+            document.getElementById('slip-gross').textContent = '$'+s.grossPay.toLocaleString();
+            document.getElementById('slip-tax-rate').textContent = s.taxRate;
+            document.getElementById('slip-tax').textContent = '$'+s.taxAmount.toLocaleString();
+            document.getElementById('slip-ins-rate').textContent = s.insRate;
+            document.getElementById('slip-ins').textContent = '$'+s.insAmount.toLocaleString();
+            document.getElementById('slip-other').textContent = '$'+s.otherDed.toLocaleString();
+            document.getElementById('slip-total-ded').textContent = '$'+s.totalDed.toLocaleString();
+            document.getElementById('slip-net').textContent = '$'+s.netPay.toLocaleString();
+        }
+
+        function closeSlip() { document.getElementById('payslip-wrapper').style.display='none'; document.getElementById('calc-form').style.display='block'; }
+        function viewSlip(id) { const s = history.find(h=>h.slipId===id); if(s) { document.querySelector('[data-target="calculator"]').click(); showSlip(s); } }
+        function changeEmpPage(p) { empPage=p; renderEmps(); }
+        function changeHistPage(p) { histPage=p; renderHist(); }
+        function openEmpModal() { if(!departments.length) return showToast('Add a department first','warning'); openModal('empModal'); }
+        async function saveSettings() {
+            settings.taxRate = parseFloat(document.getElementById('set-tax').value)||15;
+            settings.insRate = parseFloat(document.getElementById('set-ins').value)||5;
+            await save('settings',{id:'global',...settings});
+            showToast('Settings saved','success');
+        }
+        async function loadDemo() {
+            if(!confirm('Load demo data?')) return;
+            const dd = [{id:'D-ENG',name:'Engineering'},{id:'D-SAL',name:'Sales'},{id:'D-HRM',name:'HR'}];
+            const de = [{id:'EMP-001',name:'John Doe',dept:'D-ENG',base:8500},{id:'EMP-002',name:'Jane Smith',dept:'D-ENG',base:7200},{id:'EMP-003',name:'Robert Brown',dept:'D-SAL',base:5400},{id:'EMP-004',name:'Emily Davis',dept:'D-SAL',base:6100},{id:'EMP-005',name:'Mike Wilson',dept:'D-HRM',base:4800}];
+            await clearS('departments'); await clearS('employees'); await clearS('payroll');
+            for(let d of dd) await save('departments',d);
+            for(let e of de) await save('employees',e);
+            departments=dd; employees=de; history=[];
+            updateDash(); renderDepts(); renderEmps(); renderHist(); populateSelects();
+            showToast('Demo data loaded','success');
+        }
+        async function clearAll() {
+            if(!confirm('Delete ALL data?')) return;
+            await clearS('departments'); await clearS('employees'); await clearS('payroll');
+            departments=[]; employees=[]; history=[];
+            updateDash(); renderDepts(); renderEmps(); renderHist(); populateSelects();
+            showToast('All data cleared','warning');
+        }
+
+        document.getElementById('search-emp')?.addEventListener('input',()=>{empPage=1;renderEmps();});
+        document.querySelectorAll('.nav-item').forEach(n => n.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
+            const t = this.dataset.target;
+            document.getElementById(t).classList.add('active');
+            document.getElementById('page-title').textContent = {dashboard:'Dashboard',departments:'Departments',employees:'Employees',calculator:'Calculator',reports:'History',settings:'Settings'}[t];
+            if(t==='dashboard') updateDash();
+            if(t==='calculator') populateSelects();
+        }));
+
+        document.addEventListener('contextmenu', e => { e.preventDefault(); alert('⛔ Demo version. Purchase at digitalyar.company'); });
+        document.addEventListener('keydown', e => { if((e.ctrlKey&&e.key==='s')||(e.ctrlKey&&e.key==='u')||e.key==='F12') e.preventDefault(); });
+    </script>
+</body>
+</html>
